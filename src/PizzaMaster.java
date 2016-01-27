@@ -1,5 +1,3 @@
-import org.jacop.core.BoundDomain;
-import org.jacop.core.IntDomain;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 
@@ -22,9 +20,9 @@ public class PizzaMaster {
     private static void letsDeal(int n, int[] price, int m, int[] buy, int[] free) {
         Store store = new Store();
         IntVar[] p = new IntVar[n];
-        for(int i = 0; i < n; i++){
-            p[i] = new IntVar(store, "p"+i, price[i],price[i]);
+        for(int i = 0; i < n; i++) {
+            p[i] = new IntVar(store, "p" + i, price[i], price[i]);
         }
-        System.out.print(p[0].value());
+
     }
 }
