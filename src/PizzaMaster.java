@@ -2,8 +2,6 @@ import org.jacop.constraints.*;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 import org.jacop.search.*;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class PizzaMaster {
@@ -24,51 +22,83 @@ public class PizzaMaster {
 
     private static void letsDeal(int n, int[] price, int m, int[] buy, int[] free) {
         Store store = new Store();
-        IntVar[][] pPaid = new IntVar[n][m];
-        IntVar[][] pFree = new IntVar[n][m];
+        IntVar[] paidPizzas = new IntVar[n];
+        IntVar[] freePizzas = new IntVar[n];
+        IntVar[][] voucherBought = new IntVar[m][n];
+        IntVar[][] voucherFree = new IntVar[m][n];
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                pPaid[i][j] = new IntVar(store, "p" + (i * 10 + j), 0, 1);
-                pFree[i][j] = new IntVar(store, "f" + (i * 10 + j), 0, 1);
+
+        //Populera paidPizzaz och freePizzas
+        //Samt lägg till constraint för att
+        //en pizza kan inte både köpas och fås.
+        for(int i = 0; i < n; i++){
+            paidPizzas[i] = new IntVar(store, "Paid pizza"+i, 0,1);
+            freePizzas[i] = new IntVar(store, "Free pizza"+i, 0,1);
+            store.impose(new XneqY(paidPizzas[i], freePizzas[i]));
+        }
+
+        //Summan av köpta och gratis pizzor ska vara = n.
+        IntVar bought = new IntVar(store, "bought", n, n);
+        store.impose(new SumInt(store, mergeVectors(paidPizzas, freePizzas), "==", bought));
+
+
+        //Populera voucherBought och voucherFree
+        //Samt att en pizza kan inte fås av en voucher om den
+        //användes för att aktivera vouchern.
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                voucherBought[i][j] = new IntVar(store, "Paid pizza" + (i * 10 + j), 0, 1);
+                voucherFree[i][j] = new IntVar(store, "Free pizza" + (i*10+j), 0, 1);
+                store.impose(new XneqY(voucherBought[i][j], voucherFree[i][j]));
             }
         }
 
-        ArrayList<IntVar[]> pPaidRows = getRows(pPaid);
-        ArrayList<IntVar[]> pFreeRows = getRows(pFree);
 
 
-        //Man kan inte köpa (eller få gratis) samma pizza två gånger.
-        //Matematiskt, summan av varje rad i matriserna <= 1;
-        for (int i = 0; i < n; i++) {
-            store.impose(new SumInt(store,pPaidRows.get(i),"<=", new IntVar(store,1,1)));
-            store.impose(new SumInt(store,pFreeRows.get(i),"<=", new IntVar(store,1,1)));
+        //En pizza får inte användas för att "aktivera" två olika vouchers.
+        int index = 0;
+        for(IntVar[] iv : getColumns(voucherBought)){
+            store.impose(new SumInt(store, iv, "<=", new IntVar(store, 1, 1)));
+            store.impose(new SumInt(store, iv, "==", paidPizzas[index]));
+            index++;
         }
 
-        //Summan av matriserna = n
-        IntVar bought = new IntVar(store, "bought", n, n);
-        store.impose(new SumInt(store, listyfy(pPaid, pFree), "==", bought));
+        //En pizza ska inte tas ut gratis två gånger.
+        for(IntVar[] iv : getColumns(voucherFree)){
+            store.impose(new SumInt(store, iv, "<=", new IntVar(store, 1, 1)));
+        }
 
-
-        //Summan av column pPaid[i] = buy i
-
-
-        //Summan av column pFree[i] <= free i
-        //Dvs. du får inte ta fler gratispizzor än kupongen tillåter.
-        ArrayList<IntVar[]> pPaidCols = getColumns(pPaid);
-        ArrayList<IntVar[]> pFreeCols = getColumns(pFree);
+        //Antalet gratizpizzor får inte överstiga antalet som vouchern erbjuder.
         for(int i = 0; i < m; i++){
-            store.impose(new SumInt(store, pFreeCols.get(i), "<=", new IntVar(store, free[i], free[i])));
-            PrimitiveConstraint vouchPaid = new SumInt(store, pPaidCols.get(i), "==", new IntVar(store, buy[i], buy[i]));
-            PrimitiveConstraint vouchFree = new SumInt(store, pFreeCols.get(i), "==", new IntVar(store, free[i], free[i]));
-            store.impose(new IfThen(vouchFree, vouchPaid));
+           store.impose(new SumInt(store, voucherFree[i], "<=", new IntVar(store, free[i], free[i])));
         }
 
-        //Pizza som tas gratis får inte vara dyrare än den billigaste som köpts
+        //Du får inte ta fler gratispizzor än vouchern tillåter samt
+        //du får inte ta gratispizzor om du inte betalar för tillräckligt många pizzor.
+        for(int i =0; i < m; i ++){
+            PrimitiveConstraint nbrPaid = new SumInt(store, voucherBought[i],">=", new IntVar(store, buy[i], buy[i]));
+            PrimitiveConstraint nbrFree = new SumInt(store, voucherFree[i],"<=", new IntVar(store, free[i], free[i]));
+            PrimitiveConstraint zero = new SumInt(store, voucherFree[i], "==", new IntVar(store, 0, 0));
+            store.impose(new IfThenElse(nbrPaid, nbrFree, zero));
+        }
+
+        //Populera variabelvektorn med priser.
+        IntVar[] priceVar = new IntVar[price.length];
+        for(int i = 0; i < price.length; i++){
+            priceVar[i] = new IntVar(store, price[i], price[i]);
+        }
+        //Pizza som tas gratis får inte vara dyrare än den billigaste som köpts.
+        for(int i = 0; i < m; i++){
+            for(int j = 0; j<n; j++){
+                for(int k = 0; k < n; k++){
+
+                }
+            }
+        }
 
 
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
-        SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(pPaid, null, new IndomainMin<IntVar>());
+        SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(paidPizzas, null, new IndomainMin<IntVar>());
 
         search.setSolutionListener(new PrintOutListener<IntVar>());
         search.getSolutionListener().searchAll(true);
@@ -76,53 +106,60 @@ public class PizzaMaster {
         boolean result = search.labeling(store, select);
 
         if (result) {
-            System.out.println("Solution : "+ java.util.Arrays.asList(pPaid));
+            System.out.println("Solution : " + java.util.Arrays.asList(paidPizzas));
         } else {
             System.out.println("No solution found.");
         }
 
     }
 
-    private static ArrayList<IntVar[]> getRows(IntVar[][] matrix) {
-        ArrayList<IntVar[]> rows = new ArrayList<>();
-        IntVar[] row = new IntVar[matrix[0].length];
+    private static ArrayList<IntVar[]> getColumns(IntVar[][] matrix) {
+        ArrayList<IntVar[]> cols = new ArrayList<>();
+        IntVar[] col = new IntVar[matrix[0].length];
 
         for (int j = 0; j < matrix.length; j++) {
             for (int i = 0; i < matrix[0].length; i++) {
-                row[i] = matrix[i][j];
+                col[i] = matrix[j][i];
             }
-            rows.add(row);
+            cols.add(col);
         }
-        return rows;
+        return cols;
     }
 
-    private static ArrayList<IntVar[]> getColumns(IntVar[][] matrix){
-        ArrayList<IntVar[]> columns = new ArrayList<>();
-
-        for(int i = 0; i < matrix.length; i++){
-            columns.add(matrix[i]);
-        }
-
-        return columns;
-    }
-
-    private static IntVar[] listyfy(IntVar[][] A, IntVar[][] B){
-        int size = 2*A.length*2*B.length;
+    private static IntVar[] mergeVectors(IntVar[] v1, IntVar[] v2){
+        int size = v1.length+v2.length;
         int index = 0;
-        IntVar[] list = new IntVar[size];
-        ArrayList<IntVar[]> Arows = getRows(A);
-        ArrayList<IntVar[]> Brows = getRows(B);
-        for(IntVar[] iv : Arows){
-            for(int i = 0; i < iv.length; i ++){
-                list[index] = iv[i];
+        IntVar[] merged = new IntVar[size];
+            for(int i = 0; i < v1.length; i++){
+                merged[index] = v1[i];
                 index++;
             }
-        }for(IntVar[] iv : Brows){
-            for(int i = 0; i < iv.length; i ++){
-                list[index] = iv[i];
+            for(int i = 0; i < v2.length; i++){
+                merged[index] = v2[i];
                 index++;
+            }
+        return merged;
+    }
+
+    private static int getCheapest(IntVar[] var, int[] price){
+        int min = Integer.MAX_VALUE;
+        for(int i = 0; i < price.length; i++){
+            System.out.println("Min: " +var[i].value());
+            if(var[i].value() != 0 && min > var[i].value()*price[i]){
+                min = var[i].value()*price[i];
             }
         }
-        return list;
+        return min;
+    }
+
+    private static int getMostExpensive(IntVar[] var, int[] price){
+        int max = Integer.MIN_VALUE;
+        for(int i = 0; i < price.length; i++){
+            System.out.println("Max: " +var[i].value());
+            if(max < var[i].value()*price[i]){
+                max = var[i].value()*price[i];
+            }
+        }
+        return max;
     }
 }
