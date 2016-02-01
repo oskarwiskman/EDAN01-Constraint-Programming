@@ -10,7 +10,7 @@ public class PizzaMaster {
         long T1, T2, T;
 
         T1 = System.currentTimeMillis();
-        example(3);
+        example(2);
         T2 = System.currentTimeMillis();
         T = T2 - T1;
         System.out.println("\n\t*** Execution time = " + T + " ms");
@@ -75,11 +75,6 @@ public class PizzaMaster {
             store.impose(new IfThenElse(nbrPaid, nbrFree, zero));
         }
 
-        //Populera variabelvektorn med priser.
-        IntVar[] priceVar = new IntVar[price.length];
-        for (int i = 0; i < price.length; i++) {
-            priceVar[i] = new IntVar(store, price[i], price[i]);
-        }
         //Pizza som tas gratis får inte vara dyrare än den billigaste som köpts.
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
@@ -90,6 +85,8 @@ public class PizzaMaster {
                 }
             }
         }
+
+        
 
         IntVar cost = new IntVar(store, "Cost ", 0, sum(price));
         bubbleSort(price);
@@ -106,6 +103,14 @@ public class PizzaMaster {
 
         if (result) {
             System.out.println("Solution : " + java.util.Arrays.asList(paidPizzas));
+            System.out.println("Paid pizzas vector:");
+            printVector(paidPizzas);
+            System.out.println("Free pizzas vector:");
+            printVector(freePizzas);
+            System.out.println("Voucher bought matrix:");
+            printMatrix(voucherBought);
+            System.out.println("Voucher free matrix:");
+            printMatrix(voucherFree);
         } else {
             System.out.println("No solution found.");
         }
@@ -202,5 +207,12 @@ public class PizzaMaster {
             }
             System.out.print("\n");
         }
+    }
+
+    private  static void printVector(IntVar[] vector){
+        for(int i = 0; i < vector.length; i ++){
+            System.out.print(vector[i].value()+" ");
+        }
+        System.out.print("\n");
     }
 }
