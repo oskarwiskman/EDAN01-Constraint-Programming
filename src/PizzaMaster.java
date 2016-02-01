@@ -75,11 +75,6 @@ public class PizzaMaster {
             store.impose(new IfThenElse(nbrPaid, nbrFree, zero));
         }
 
-        //Populera variabelvektorn med priser.
-        IntVar[] priceVar = new IntVar[price.length];
-        for(int i = 0; i < price.length; i++){
-            priceVar[i] = new IntVar(store, price[i], price[i]);
-        }
         //Pizza som tas gratis får inte vara dyrare än den billigaste som köpts.
         for(int i = 0; i < m; i++){
             for(int j = 0; j<n; j++){
@@ -90,6 +85,8 @@ public class PizzaMaster {
                 }
             }
         }
+
+        
 
         IntVar cost = new IntVar(store, "Cost ", 0, sum(price));
         bubbleSort(price);
