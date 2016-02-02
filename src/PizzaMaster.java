@@ -9,13 +9,13 @@ public class PizzaMaster {
         long T1, T2, T;
 
         T1 = System.currentTimeMillis();
-        example(2);
+        example(1);
         T2 = System.currentTimeMillis();
         T = T2 - T1;
         System.out.println("\n\t*** Execution time = " + T + " ms");
     }
 
-    private static void letsDeal(int n, int[] price, int m, int[] buy, int[] free) {
+    private static void solve(int n, int[] price, int m, int[] buy, int[] free) {
         Store store = new Store();
         IntVar[] paidPizzas = new IntVar[n];
         IntVar[] freePizzas = new IntVar[n];
@@ -28,7 +28,7 @@ public class PizzaMaster {
         //en pizza kan inte både köpas och fås.
         for(int i = 0; i < n; i++){
             paidPizzas[i] = new IntVar(store, "Paid pizza"+(i+1), 0,1);
-            freePizzas[i] = new IntVar(store, "Free pizza"+i+1, 0,1);
+            freePizzas[i] = new IntVar(store, "Free pizza"+(i+1), 0,1);
             store.impose(new XneqY(paidPizzas[i], freePizzas[i]));
         }
 
@@ -44,27 +44,25 @@ public class PizzaMaster {
             for (int j = 0; j < n; j++) {
                 voucherBought[i][j] = new IntVar(store, "Paid pizza" + ((i+1) * 10 + j), 0, 1);
                 voucherFree[i][j] = new IntVar(store, "Free pizza" + ((i+1)*10+j), 0, 1);
-                store.impose(new XneqY(voucherBought[i][j], voucherFree[i][j]));
+                store.impose(new Not(new XplusYeqC(voucherBought[i][j], voucherFree[i][j], 2)));
             }
         }
 
         //En pizza får inte användas för att "aktivera" två olika vouchers.
-        int index = 0;
-        for(IntVar[] iv : getColumns(voucherBought)){
-            store.impose(new SumInt(store, iv, "<=", new IntVar(store, 1, 1)));
-            store.impose(new SumInt(store, iv, "==", paidPizzas[index]));
-            index++;
-        }
-
-        //En pizza ska inte tas ut gratis två gånger.
-        for(IntVar[] iv : getColumns(voucherFree)){
-            store.impose(new SumInt(store, iv, "<=", new IntVar(store, 1, 1)));
+        for(int i = 0; i<getColumns(voucherBought).size(); i++){
+            store.impose(new SumInt(store, getColumns(voucherBought).get(i), "<=", new IntVar(store, 1, 1)));
+            store.impose(new SumInt(store, getColumns(voucherFree).get(i), "<=", new IntVar(store, 1, 1)));
+            store.impose(new SumInt(store, getColumns(voucherBought).get(i), "==", paidPizzas[i]));
+            store.impose(new SumInt(store, getColumns(voucherFree).get(i), "==", freePizzas[i]));
         }
 
         //Antalet gratizpizzor får inte överstiga antalet som vouchern erbjuder.
         for(int i = 0; i < m; i++){
            store.impose(new SumInt(store, voucherFree[i], "<=", new IntVar(store, free[i], free[i])));
         }
+
+        //Totala antalet gratispizzor får inte överstiga summan av de gratispizzor som kan fås av vouchers.
+//        store.impose(new SumInt(store, freePizzas, "<=", new IntVar(store, sum(free), sum(free))));
 
         //Du får inte ta fler gratispizzor än vouchern tillåter samt
         //du får inte ta gratispizzor om du inte betalar för tillräckligt många pizzor.
@@ -94,10 +92,10 @@ public class PizzaMaster {
 
 
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
-        SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(paidPizzas, null, new IndomainMin<IntVar>());
+        SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(voucherBought, null, new IndomainMin<IntVar>());
 
-//        search.setSolutionListener(new PrintOutListener<IntVar>());
-//        search.getSolutionListener().searchAll(true);
+        search.setSolutionListener(new PrintOutListener<IntVar>());
+        search.getSolutionListener().searchAll(true);
 
         boolean result = search.labeling(store, select, cost);
 
@@ -105,8 +103,8 @@ public class PizzaMaster {
             System.out.println("Solution : " + java.util.Arrays.asList(paidPizzas));
             System.out.println("Paid pizzas vector:");
             printVector(paidPizzas);
-            System.out.println("Free pizzas vector:");
-            printVector(freePizzas);
+            System.out.println("Prices:");
+            printIntVector(price);
             System.out.println("Voucher bought matrix:");
             printMatrix(voucherBought);
             System.out.println("Voucher free matrix:");
@@ -119,11 +117,11 @@ public class PizzaMaster {
 
     private static ArrayList<IntVar[]> getColumns(IntVar[][] matrix) {
         ArrayList<IntVar[]> cols = new ArrayList<>();
-        IntVar[] col = new IntVar[matrix[0].length];
+        IntVar[] col = new IntVar[matrix.length];
 
-        for (int j = 0; j < matrix.length; j++) {
-            for (int i = 0; i < matrix[0].length; i++) {
-                col[i] = matrix[j][i];
+        for (int i = 0; i < matrix[0].length; i++) {
+            for (int j = 0; j < matrix.length; j++) {
+                col[j] = matrix[j][i];
             }
             cols.add(col);
         }
@@ -179,15 +177,15 @@ public class PizzaMaster {
                 int m = 2;
                 int[] buy = {1, 2};
                 int[] free = {1, 1};
-                letsDeal(n, price, m, buy, free);
+                solve(n, price, m, buy, free);
                 break;
             case 2:
                 int n2 = 4;
                 int[] price2 = {10, 15, 20, 15};
-                int m2 = 2;
+                int m2 = 7;
                 int[] buy2 = {1, 2, 2, 8, 3, 1, 4};
                 int[] free2 = {1, 1, 2 ,9, 1, 0, 1};
-                letsDeal(n2, price2, m2, buy2, free2);
+                solve(n2, price2, m2, buy2, free2);
                 break;
             case 3:
                 int n3 = 10;
@@ -195,7 +193,15 @@ public class PizzaMaster {
                 int m3 = 4;
                 int[] buy3 = {1, 2, 1, 1};
                 int[] free3 = {1, 1, 1, 0};
-                letsDeal(n3, price3, m3, buy3, free3);
+                solve(n3, price3, m3, buy3, free3);
+                break;
+            case 4:
+                int n4 = 6;
+                int[] price4 = {20,15,10,5,10,10};
+                int m4 = 4;
+                int[] buy4 = {1, 1, 1, 1};
+                int[] free4 = {1, 0, 0, 0};
+                solve(n4, price4, m4, buy4, free4);
                 break;
         }
     }
@@ -212,6 +218,13 @@ public class PizzaMaster {
     private  static void printVector(IntVar[] vector){
         for(int i = 0; i < vector.length; i ++){
             System.out.print(vector[i].value()+" ");
+        }
+        System.out.print("\n");
+    }
+
+    private  static void printIntVector(int[] vector){
+        for(int i = 0; i < vector.length; i ++){
+            System.out.print(vector[i]+" ");
         }
         System.out.print("\n");
     }
