@@ -9,7 +9,7 @@ public class PizzaMaster {
         long T1, T2, T;
 
         T1 = System.currentTimeMillis();
-        example(1);
+        example(3);
         T2 = System.currentTimeMillis();
         T = T2 - T1;
         System.out.println("\n\t*** Execution time = " + T + " ms");
@@ -49,11 +49,11 @@ public class PizzaMaster {
         }
 
         //En pizza får inte användas för att "aktivera" två olika vouchers.
-        for(int i = 0; i<getColumns(voucherBought).size(); i++){
-            store.impose(new SumInt(store, getColumns(voucherBought).get(i), "<=", new IntVar(store, 1, 1)));
-            store.impose(new SumInt(store, getColumns(voucherFree).get(i), "<=", new IntVar(store, 1, 1)));
-            store.impose(new SumInt(store, getColumns(voucherBought).get(i), "==", paidPizzas[i]));
-            store.impose(new SumInt(store, getColumns(voucherFree).get(i), "==", freePizzas[i]));
+        for(int i = 0; i<n; i++){
+            store.impose(new SumInt(store, getColumn(voucherBought, i), "<=", new IntVar(store, 1, 1)));
+            store.impose(new SumInt(store, getColumn(voucherFree, i), "<=", new IntVar(store, 1, 1)));
+            store.impose(new SumInt(store, getColumn(voucherBought, i), "==", paidPizzas[i]));
+            store.impose(new SumInt(store, getColumn(voucherFree, i), "==", freePizzas[i]));
         }
 
         //Antalet gratizpizzor får inte överstiga antalet som vouchern erbjuder.
@@ -94,13 +94,13 @@ public class PizzaMaster {
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
         SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(voucherBought, null, new IndomainMin<IntVar>());
 
-        search.setSolutionListener(new PrintOutListener<IntVar>());
-        search.getSolutionListener().searchAll(true);
+//        search.setSolutionListener(new PrintOutListener<IntVar>());
+//        search.getSolutionListener().searchAll(true);
 
         boolean result = search.labeling(store, select, cost);
 
         if (result) {
-            System.out.println("Solution : " + java.util.Arrays.asList(paidPizzas));
+            System.out.println("Solution : ");
             System.out.println("Paid pizzas vector:");
             printVector(paidPizzas);
             System.out.println("Prices:");
@@ -115,17 +115,12 @@ public class PizzaMaster {
 
     }
 
-    private static ArrayList<IntVar[]> getColumns(IntVar[][] matrix) {
-        ArrayList<IntVar[]> cols = new ArrayList<>();
+    private static IntVar[] getColumn(IntVar[][] matrix, int i) {
         IntVar[] col = new IntVar[matrix.length];
-
-        for (int i = 0; i < matrix[0].length; i++) {
-            for (int j = 0; j < matrix.length; j++) {
-                col[j] = matrix[j][i];
-            }
-            cols.add(col);
+        for (int j = 0; j < matrix.length; j++) {
+            col[j] = matrix[j][i];
         }
-        return cols;
+        return col;
     }
 
     private static IntVar[] mergeVectors(IntVar[] v1, IntVar[] v2){

@@ -119,7 +119,6 @@ public class Logistics {
 
     private static IntVar[] getColumn(IntVar[][] matrix, int i) {
         IntVar[] col = new IntVar[matrix.length];
-
         for (int j = 0; j < matrix.length; j++) {
             col[j] = matrix[j][i];
         }
