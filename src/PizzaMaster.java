@@ -3,6 +3,7 @@ import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 import org.jacop.search.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class PizzaMaster {
     public static void main(String[] args) {
@@ -100,7 +101,8 @@ public class PizzaMaster {
         boolean result = search.labeling(store, select, cost);
 
         if (result) {
-            System.out.println("Solution : ");
+            System.out.print("Solution with ");
+            System.out.print(store.numberConstraints() + " constraints.\n");
             System.out.println("Paid pizzas vector:");
             printVector(paidPizzas);
             System.out.println("Prices:");

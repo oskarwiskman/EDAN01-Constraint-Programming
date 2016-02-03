@@ -36,7 +36,7 @@ public class Logistics {
             store.impose(new SumInt(store, getColumn(paths, i), "<=", new IntVar(store, 1, 1)));
         }
 
-        // Du får inte lämna en nod du aldrig kommit till.
+        // Du får inte lämna en nod du inte besökt.
         for(int i = 0; i < graph_size; i ++){
             if(i!=start-1) {
                 PrimitiveConstraint c1 = new SumInt(store, getColumn(paths, i), ">", new IntVar(store, 0, 0));
