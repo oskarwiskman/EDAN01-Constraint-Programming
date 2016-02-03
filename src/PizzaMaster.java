@@ -92,7 +92,7 @@ public class PizzaMaster {
 
 
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
-        SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(voucherBought, null, new IndomainMin<IntVar>());
+        SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(mergeMatrices(voucherBought, voucherFree), null, new IndomainMin<IntVar>());
 
 //        search.setSolutionListener(new PrintOutListener<IntVar>());
 //        search.getSolutionListener().searchAll(true);
@@ -121,6 +121,26 @@ public class PizzaMaster {
             col[j] = matrix[j][i];
         }
         return col;
+    }
+
+    private static IntVar[][] mergeMatrices(IntVar[][] A, IntVar[][] B){
+        int rows = A.length+B.length;
+        int columns = A[0].length;
+        int indexRow=0;
+        IntVar[][] matrix = new IntVar[rows][columns];
+        for(int i = 0; i < A.length; i++){
+            for(int e = 0; e < A[0].length; e++){
+                matrix[indexRow][e] = A[i][e];
+            }
+            indexRow++;
+        }
+        for(int i = 0; i < B.length; i++){
+            for(int e = 0; e < B[0].length; e++){
+                matrix[indexRow][e] = B[i][e];
+            }
+            indexRow++;
+        }
+        return matrix;
     }
 
     private static IntVar[] mergeVectors(IntVar[] v1, IntVar[] v2){
@@ -186,17 +206,9 @@ public class PizzaMaster {
                 int n3 = 10;
                 int[] price3 = {70, 10, 60, 60, 30, 100, 60, 40, 60, 20};
                 int m3 = 4;
-                int[] buy3 = {1, 2, 1, 1};
-                int[] free3 = {1, 1, 1, 0};
+                int[] buy3 =    {1, 2, 1, 1};
+                int[] free3 =   {1, 1, 1, 0};
                 solve(n3, price3, m3, buy3, free3);
-                break;
-            case 4:
-                int n4 = 6;
-                int[] price4 = {20,15,10,5,10,10};
-                int m4 = 4;
-                int[] buy4 = {1, 1, 1, 1};
-                int[] free4 = {1, 0, 0, 0};
-                solve(n4, price4, m4, buy4, free4);
                 break;
         }
     }
