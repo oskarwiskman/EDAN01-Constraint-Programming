@@ -10,7 +10,7 @@ public class PizzaMaster {
         long T1, T2, T;
 
         T1 = System.currentTimeMillis();
-        example(3);
+        example(2);
         T2 = System.currentTimeMillis();
         T = T2 - T1;
         System.out.println("\n\t*** Execution time = " + T + " ms");
