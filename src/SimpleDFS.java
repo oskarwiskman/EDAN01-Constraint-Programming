@@ -1,37 +1,34 @@
 /**
- *  SimpleDFS.java 
- *  This file is part of JaCoP.
- *
- *  JaCoP is a Java Constraint Programming solver. 
- *	
- *	Copyright (C) 2000-2008 Krzysztof Kuchcinski and Radoslaw Szymanek
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
- *  
- *  Notwithstanding any other provision of this License, the copyright
- *  owners of this work supplement the terms of this License with terms
- *  prohibiting misrepresentation of the origin of this work and requiring
- *  that modified versions of this work be marked in reasonable ways as
- *  different from the original version. This supplement of the license
- *  terms is in accordance with Section 7 of GNU Affero General Public
- *  License version 3.
- *
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * SimpleDFS.java
+ * This file is part of JaCoP.
+ * <p>
+ * JaCoP is a Java Constraint Programming solver.
+ * <p>
+ * Copyright (C) 2000-2008 Krzysztof Kuchcinski and Radoslaw Szymanek
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * <p>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * <p>
+ * Notwithstanding any other provision of this License, the copyright
+ * owners of this work supplement the terms of this License with terms
+ * prohibiting misrepresentation of the origin of this work and requiring
+ * that modified versions of this work be marked in reasonable ways as
+ * different from the original version. This supplement of the license
+ * terms is in accordance with Section 7 of GNU Affero General Public
+ * License version 3.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.jacop.constraints.Not;
-import org.jacop.constraints.PrimitiveConstraint;
-import org.jacop.constraints.XeqC;
+import org.jacop.constraints.*;
 import org.jacop.core.FailException;
 import org.jacop.core.IntDomain;
 import org.jacop.core.IntVar;
@@ -39,12 +36,12 @@ import org.jacop.core.Store;
 
 /**
  * Implements Simple Depth First Search .
- * 
+ *
  * @author Krzysztof Kuchcinski
  * @version 4.1
  */
 
-public class SimpleDFS  {
+public class SimpleDFS {
 
     boolean trace = false;
 
@@ -74,8 +71,12 @@ public class SimpleDFS  {
     public IntVar costVariable = null;
 
     public SimpleDFS(Store s) {
-	store = s;
+        store = s;
     }
+
+    public int nbrNodes = 0;
+
+    public int wrongDec = 0;
 
 
     /**
@@ -83,159 +84,188 @@ public class SimpleDFS  {
      */
     public boolean label(IntVar[] vars) {
 
-	if (trace) {
-	    for (int i = 0; i < vars.length; i++) 
-		System.out.print (vars[i] + " ");
-	    System.out.println ();
-	}
+        if (trace) {
+            for (int i = 0; i < vars.length; i++)
+                System.out.print(vars[i] + " ");
+            System.out.println();
+        }
 
-	ChoicePoint choice = null;
-	boolean consistent;
+        ChoicePoint choice = null;
+        boolean consistent;
 
-	// Instead of imposing constraint just restrict bounds
-	// -1 since costValue is the cost of last solution
-	if (costVariable != null) {
-	    try {
-		if (costVariable.min() <= costValue - 1)
-		    costVariable.domain.in(store.level, costVariable, costVariable.min(), costValue - 1);
-		else
-		    return false;
-	    } catch (FailException f) {
-		return false;
-	    }
-	}
+        // Instead of imposing constraint just restrict bounds
+        // -1 since costValue is the cost of last solution
+        if (costVariable != null) {
+            try {
+                if (costVariable.min() <= costValue - 1)
+                    costVariable.domain.in(store.level, costVariable, costVariable.min(), costValue - 1);
+                else
+                    return false;
+            } catch (FailException f) {
+                return false;
+            }
+        }
 
-	consistent = store.consistency();
-		
-	if (!consistent) {
-	    // Failed leaf of the search tree
-	    return false;
-	} else { // consistent
+        consistent = store.consistency();
 
-	    if (vars.length == 0) {
-		// solution found; no more variables to label
+        if (!consistent) {
+            // Failed leaf of the search tree
+            return false;
+        } else { // consistent
 
-		// update cost if minimization
-		if (costVariable != null)
-		    costValue = costVariable.min();
+            if (vars.length == 0) {
+                // solution found; no more variables to label
 
-		reportSolution();
+                // update cost if minimization
+                if (costVariable != null)
+                    costValue = costVariable.min();
 
-		return costVariable == null; // true is satisfiability search and false if minimization
-	    }
+                reportSolution();
 
- 	    choice = new ChoicePoint(vars);
+                return costVariable == null; // true is satisfiability search and false if minimization
+            }
 
-	    levelUp();
+            choice = new ChoicePoint(vars);
+            nbrNodes++;
 
-	    store.impose(choice.getConstraint());
+            levelUp();
 
-	    // choice point imposed.
-			
-	    consistent = label(choice.getSearchVariables());
+            store.impose(choice.getConstraint());
+
+            // choice point imposed.
+
+            consistent = label(choice.getSearchVariables());
 
             if (consistent) {
-		levelDown();
-		return true;
-	    } else {
+                levelDown();
+                return true;
+            } else {
 
-		restoreLevel();
+                restoreLevel();
 
-		store.impose(new Not(choice.getConstraint()));
+                store.impose(new Not(choice.getConstraint()));
+                wrongDec++;
+                // negated choice point imposed.
 
-		// negated choice point imposed.
-		
-		consistent = label(vars);
+                consistent = label(vars);
 
-		levelDown();
+                levelDown();
 
-		if (consistent) {
-		    return true;
-		} else {
-		    return false;
-		}
-	    }
-	}
+                if (consistent) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
     }
 
     void levelDown() {
-	store.removeLevel(depth);
-	store.setLevel(--depth);
+        store.removeLevel(depth);
+        store.setLevel(--depth);
     }
 
     void levelUp() {
-	store.setLevel(++depth);
+        store.setLevel(++depth);
     }
 
     void restoreLevel() {
-	store.removeLevel(depth);
-	store.setLevel(store.level);
+        store.removeLevel(depth);
+        store.setLevel(store.level);
     }
 
     public void reportSolution() {
-	if (costVariable != null)
-	    System.out.println ("Cost is " + costVariable);
+        if (costVariable != null)
+            System.out.println("Cost is " + costVariable);
 
-	for (int i = 0; i < variablesToReport.length; i++) 
-	    System.out.print (variablesToReport[i] + " ");
-	System.out.println ("\n---------------");
+        for (int i = 0; i < variablesToReport.length; i++)
+            System.out.print(variablesToReport[i] + " ");
+
+        System.out.println("\nNumber of nodes: " + nbrNodes);
+        System.out.println("Number of wrong decisions: " + wrongDec);
+        System.out.println("\n---------------");
     }
 
     public void setVariablesToReport(IntVar[] v) {
-	variablesToReport = v;
+        variablesToReport = v;
     }
 
     public void setCostVariable(IntVar v) {
-	costVariable = v;
+        costVariable = v;
     }
 
     public class ChoicePoint {
 
-	IntVar var;
-	IntVar[] searchVariables;
-	int value;
+        IntVar var;
+        IntVar[] searchVariables;
+        int value;
+        int example = 2;
 
-	public ChoicePoint (IntVar[] v) {
-	    var = selectVariable(v);
-	    value = selectValue(var);
-	}
+        public ChoicePoint(IntVar[] v) {
+            var = selectVariable(v);
+            value = selectValue(var);
+        }
 
-	public IntVar[] getSearchVariables() {
-	    return searchVariables;
-	}
+        public IntVar[] getSearchVariables() {
+            return searchVariables;
+        }
 
-	/**
-	 * example variable selection; input order
-	 */ 
-	IntVar selectVariable(IntVar[] v) {
-	    if (v.length != 0) {
+        /**
+         * example variable selection; input order
+         */
+        public IntVar selectVariable(IntVar[] v) {
+            if (v.length != 0) {
+                if(example==0){
+                    searchVariables = new IntVar[v.length-1];
+                    for (int i = 0; i < v.length-1; i++) {
+                        searchVariables[i] = v[i+1];
+                    }
 
-		searchVariables = new IntVar[v.length-1];
-		for (int i = 0; i < v.length-1; i++) {
-		    searchVariables[i] = v[i+1]; 
-		}
+                    return v[0];
+                }
+                if (v[0].min() == v[0].max()) {
+                    searchVariables = new IntVar[v.length - 1];
+                    for (int i = 0; i < v.length - 1; i++) {
+                        searchVariables[i] = v[i + 1];
+                    }
 
-		return v[0];
+                } else {
+                    searchVariables = new IntVar[v.length];
+                    for (int i = 0; i < v.length; i++) {
+                        searchVariables[i] = v[i];
+                    }
+                }
+                return v[0];
+            } else {
+                System.err.println("Zero length list of variables for labeling");
+                return new IntVar(store);
+            }
+        }
 
-	    }
-	    else {
-		System.err.println("Zero length list of variables for labeling");
-		return new IntVar(store);
-	    }
-	}
+        /**
+         * example value selection; indomain_min
+         */
+        int selectValue(IntVar v) {
+            return example == 0 ? v.min() : (v.max() + v.min()) / 2;
+        }
 
-	/**
-	 * example value selection; indomain_min
-	 */ 
-	int selectValue(IntVar v) {
-	    return v.min();
-	}
-
-	/**
-	 * example constraint assigning a selected value
-	 */
-	public PrimitiveConstraint getConstraint() {
-	    return new XeqC(var, value);
-	}
+        /**
+         * example constraint assigning a selected value
+         */
+        public PrimitiveConstraint getConstraint() {
+            PrimitiveConstraint pc = new XeqC(var, value);
+            switch (example) {
+                case 0:
+                    pc = new XeqC(var, value);
+                break;
+                case 1:
+                    pc = new XlteqC(var, value);
+                break;
+                case 2:
+                    pc = new XgteqC(var, value);
+                break;
+            }
+            return pc;
+        }
     }
 }
