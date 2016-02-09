@@ -29,9 +29,7 @@
  *
  */
 
-import org.jacop.constraints.Not;
-import org.jacop.constraints.PrimitiveConstraint;
-import org.jacop.constraints.XeqC;
+import org.jacop.constraints.*;
 import org.jacop.core.FailException;
 import org.jacop.core.IntDomain;
 import org.jacop.core.IntVar;
@@ -46,7 +44,7 @@ import org.jacop.core.Store;
 
 public class SimpleDFS  {
 
-    boolean trace = false;
+    boolean trace = true;
 
     /**
      * Store used in search
@@ -191,9 +189,10 @@ public class SimpleDFS  {
 
     public class ChoicePoint {
 
-	IntVar var;
-	IntVar[] searchVariables;
-	int value;
+	    IntVar var;
+	    IntVar[] searchVariables;
+	    int value;
+		boolean example = true;
 
 	public ChoicePoint (IntVar[] v) {
 	    var = selectVariable(v);
@@ -228,14 +227,14 @@ public class SimpleDFS  {
 	 * example value selection; indomain_min
 	 */ 
 	int selectValue(IntVar v) {
-	    return v.min();
+	    return (v.max()+v.min())/2;
 	}
 
 	/**
 	 * example constraint assigning a selected value
 	 */
 	public PrimitiveConstraint getConstraint() {
-	    return new XeqC(var, value);
+	    return example ? new XlteqC(var, value) : new XgteqC(var, value);
 	}
     }
 }
