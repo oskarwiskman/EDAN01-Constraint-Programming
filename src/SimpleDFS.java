@@ -201,7 +201,10 @@ public class SimpleDFS {
         IntVar var;
         IntVar[] searchVariables;
         int value;
+        //Choose which example to do.
         int example = 2;
+        //Choose whether to select on smallest domain or not
+        //(default is to select on input order).
         boolean select = true;
 
         public ChoicePoint(IntVar[] v) {
@@ -218,6 +221,7 @@ public class SimpleDFS {
          */
         public IntVar selectVariable(IntVar[] v) {
             if (v.length != 0) {
+                //SimpleDFS
                 if(example==0){
                     searchVariables = new IntVar[v.length-1];
                     for (int i = 0; i < v.length-1; i++) {
@@ -225,17 +229,19 @@ public class SimpleDFS {
                     }
 
                     return v[0];
-                }
+                }//Selects minimum domain first.
                 if(select){
                     int smallest = Integer.MAX_VALUE;
                     int index = 0;
-
+                    //Find the smallest domain.
                     for(int i = 0; i < v.length; i++){
                         if(v[i].domain.getSize() < smallest){
                             smallest = v[i].domain.getSize();
                             index = i;
                         }
                     }
+                    //If the element with smallest domain is found
+                    //remove it and shift the remaining values accordingly.
                     if(v[index].min()==v[index].max()){
                         searchVariables = new IntVar[v.length-1];
                         for(int i = 0; i < v.length-1; i++){
@@ -246,26 +252,34 @@ public class SimpleDFS {
                                 searchVariables[i] = v[i+1];
                             }
                         }
-                    }else{
+                    }
+                    //Else just put them all back.
+                    else{
                         searchVariables = new IntVar[v.length];
                         for (int i = 0; i < v.length; i++) {
                             searchVariables[i] = v[i];
                         }
                     }
+                    //Return the element with smallest value.
                     return v[index];
                 }
+                //Selects on input order.
+                //If first element is determined remove it.
                 if (v[0].min() == v[0].max()) {
                     searchVariables = new IntVar[v.length - 1];
                     for (int i = 0; i < v.length - 1; i++) {
                         searchVariables[i] = v[i + 1];
                     }
 
-                } else {
+                }
+                //Else put them back.
+                else {
                     searchVariables = new IntVar[v.length];
                     for (int i = 0; i < v.length; i++) {
                         searchVariables[i] = v[i];
                     }
                 }
+                //Return first element.
                 return v[0];
             } else {
                 System.err.println("Zero length list of variables for labeling");
@@ -274,7 +288,7 @@ public class SimpleDFS {
         }
 
         /**
-         * example value selection; indomain_min
+         * Value selection based on example.
          */
         int selectValue(IntVar v) {
             switch(example){
@@ -289,19 +303,19 @@ public class SimpleDFS {
         }
 
         /**
-         * example constraint assigning a selected value
+         * Assigning constraing dependant on example.
          */
         public PrimitiveConstraint getConstraint() {
             PrimitiveConstraint pc = new XeqC(var, value);
             switch (example) {
                 case 0:
-                    pc = new XeqC(var, value);
+                    pc = new XeqC(var, value); //SimpleDFS
                 break;
                 case 1:
-                    pc = new XlteqC(var, value);
+                    pc = new XlteqC(var, value); // X <= C
                 break;
                 case 2:
-                    pc = new XgteqC(var, value);
+                    pc = new XgteqC(var, value); // X >= C
                 break;
             }
             return pc;
