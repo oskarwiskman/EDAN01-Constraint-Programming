@@ -43,7 +43,7 @@ import org.jacop.core.Store;
 
 public class SimpleDFS {
 
-    boolean trace = false;
+    boolean trace = true;
 
     /**
      * Store used in search
