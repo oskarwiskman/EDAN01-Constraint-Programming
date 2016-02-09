@@ -34,6 +34,8 @@ import org.jacop.core.IntDomain;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 
+import java.util.LinkedList;
+
 /**
  * Implements Simple Depth First Search .
  *
@@ -43,7 +45,7 @@ import org.jacop.core.Store;
 
 public class SimpleDFS {
 
-    boolean trace = true;
+    boolean trace = false;
 
     /**
      * Store used in search
@@ -200,6 +202,7 @@ public class SimpleDFS {
         IntVar[] searchVariables;
         int value;
         int example = 2;
+        boolean select = true;
 
         public ChoicePoint(IntVar[] v) {
             var = selectVariable(v);
@@ -222,6 +225,34 @@ public class SimpleDFS {
                     }
 
                     return v[0];
+                }
+                if(select){
+                    int smallest = Integer.MAX_VALUE;
+                    int index = 0;
+
+                    for(int i = 0; i < v.length; i++){
+                        if(v[i].domain.getSize() < smallest){
+                            smallest = v[i].domain.getSize();
+                            index = i;
+                        }
+                    }
+                    if(v[index].min()==v[index].max()){
+                        searchVariables = new IntVar[v.length-1];
+                        for(int i = 0; i < v.length-1; i++){
+                            if(i<index){
+                                searchVariables[i] = v[i];
+                            }
+                            else{
+                                searchVariables[i] = v[i+1];
+                            }
+                        }
+                    }else{
+                        searchVariables = new IntVar[v.length];
+                        for (int i = 0; i < v.length; i++) {
+                            searchVariables[i] = v[i];
+                        }
+                    }
+                    return v[index];
                 }
                 if (v[0].min() == v[0].max()) {
                     searchVariables = new IntVar[v.length - 1];
@@ -246,7 +277,15 @@ public class SimpleDFS {
          * example value selection; indomain_min
          */
         int selectValue(IntVar v) {
-            return example == 0 ? v.min() : (v.max() + v.min()) / 2;
+            switch(example){
+                case 0: return v.min();
+                case 1: return (v.max()+v.min())/2;
+                case 2: if((v.max()+v.min())%2==0){
+                    return (v.max()+v.min())/2;
+                }
+                    return (v.max()+v.min()+1)/2;
+            }
+                return v.min();
         }
 
         /**
