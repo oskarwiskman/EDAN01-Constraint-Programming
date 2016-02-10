@@ -163,7 +163,7 @@ public class Golomb {
 
 	IntVar cost = numbers[numbers.length - 1];
 
-	SimpleDFS search = new SimpleDFS(store);
+	DFS search = new DFS(store);
 	search.setVariablesToReport(numbers);
 	search.setCostVariable(cost);
 

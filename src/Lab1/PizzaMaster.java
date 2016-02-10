@@ -12,7 +12,7 @@ public class PizzaMaster {
         long T1, T2, T;
 
         T1 = System.currentTimeMillis();
-        example(2);
+        example(3);
         T2 = System.currentTimeMillis();
         T = T2 - T1;
         System.out.println("\n\t*** Execution time = " + T + " ms");
@@ -26,23 +26,23 @@ public class PizzaMaster {
         IntVar[][] voucherFree = new IntVar[m][n];
 
 
-        //Populera paidPizzaz och freePizzas
-        //Samt lägg till constraint för att
-        //en pizza kan inte både köpas och fås.
+        //Populate pizza vectors and add constraint
+        // saying that a pizza cannot be bought AND free
+        // at the same time.
         for(int i = 0; i < n; i++){
             paidPizzas[i] = new IntVar(store, "Paid pizza"+(i+1), 0,1);
             freePizzas[i] = new IntVar(store, "Free pizza"+(i+1), 0,1);
             store.impose(new XneqY(paidPizzas[i], freePizzas[i]));
         }
 
-        //Summan av köpta och gratis pizzor ska vara = n.
+        // Add constraint saying that you HAVE to buy n pizzas.
         IntVar bought = new IntVar(store, "bought", n, n);
         store.impose(new SumInt(store, mergeVectors(paidPizzas, freePizzas), "==", bought));
 
 
-        //Populera voucherBought och voucherFree
-        //Samt att en pizza kan inte fås av en voucher om den
-        //användes för att aktivera vouchern.
+        //Populate voucher matrices and add constraint saying
+        // that you cannot get a pizza for free if it was used
+        // to activate that voucher.
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 voucherBought[i][j] = new IntVar(store, "Paid pizza" + ((i+1) * 10 + j), 0, 1);
@@ -51,24 +51,22 @@ public class PizzaMaster {
             }
         }
 
-        //En pizza får inte användas för att "aktivera" två olika vouchers.
         for(int i = 0; i<n; i++){
+            //A pizza may not be used to activate two separate vouchers.
             store.impose(new SumInt(store, getColumn(voucherBought, i), "<=", new IntVar(store, 1, 1)));
             store.impose(new SumInt(store, getColumn(voucherFree, i), "<=", new IntVar(store, 1, 1)));
+            //Project the voucher matrices on the corresponding vector. Makes sure that if a pizza was
+            //used to activate a voucher it HAS to be paid for.
             store.impose(new SumInt(store, getColumn(voucherBought, i), "==", paidPizzas[i]));
             store.impose(new SumInt(store, getColumn(voucherFree, i), "==", freePizzas[i]));
         }
 
-        //Antalet gratizpizzor får inte överstiga antalet som vouchern erbjuder.
-        for(int i = 0; i < m; i++){
-           store.impose(new SumInt(store, voucherFree[i], "<=", new IntVar(store, free[i], free[i])));
-        }
+        //The total amount of free pizzas may not exceed the total amount of free pizzas available
+        //from all vouchers. (Optimization, not necessary in order to get a solution.)
+        store.impose(new SumInt(store, freePizzas, "<=", new IntVar(store, sum(free), sum(free))));
 
-        //Totala antalet gratispizzor får inte överstiga summan av de gratispizzor som kan fås av vouchers.
-//        store.impose(new SumInt(store, freePizzas, "<=", new IntVar(store, sum(free), sum(free))));
-
-        //Du får inte ta fler gratispizzor än vouchern tillåter samt
-        //du får inte ta gratispizzor om du inte betalar för tillräckligt många pizzor.
+        //You may not receive more free pizzas than the voucher allows AND you need to pay for
+        //at least the specified amount of pizzas on a voucher in order to get ANY pizzas for free.
         for(int i =0; i < m; i ++){
             PrimitiveConstraint nbrPaid = new SumInt(store, voucherBought[i],">=", new IntVar(store, buy[i], buy[i]));
             PrimitiveConstraint nbrFree = new SumInt(store, voucherFree[i],"<=", new IntVar(store, free[i], free[i]));
@@ -76,7 +74,9 @@ public class PizzaMaster {
             store.impose(new IfThenElse(nbrPaid, nbrFree, zero));
         }
 
-        //Pizza som tas gratis får inte vara dyrare än den billigaste som köpts.
+        //On a specific voucher, you may not get any pizza for free that costs more than
+        //any of the ones you paid for on that voucher. Assumes that the prices are sorted
+        //in descending order starting with the most expensive.
         for(int i = 0; i < m; i++){
             for(int j = 0; j<n; j++){
                 for(int k = j-1; k >= 0; k--){
@@ -90,11 +90,14 @@ public class PizzaMaster {
         
 
         IntVar cost = new IntVar(store, "Cost ", 0, sum(price));
+        //Sort the price vector, most expensive first.
         bubbleSort(price);
+        //Weight the paid pizzas with the cost.
         store.impose(new SumWeight(paidPizzas, price, cost));
 
 
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
+        //select on voucher matrices.
         SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(mergeMatrices(voucherBought, voucherFree), null, new IndomainMin<IntVar>());
 
 //        search.setSolutionListener(new PrintOutListener<IntVar>());
@@ -119,6 +122,13 @@ public class PizzaMaster {
 
     }
 
+    /**
+     * Gets the column of index i.
+     * @param matrix IntVar[][], matrix
+     * @param i Integer, column index.
+     * @return IntVar[], vector containing column i of matrix.
+     */
+
     private static IntVar[] getColumn(IntVar[][] matrix, int i) {
         IntVar[] col = new IntVar[matrix.length];
         for (int j = 0; j < matrix.length; j++) {
@@ -127,25 +137,43 @@ public class PizzaMaster {
         return col;
     }
 
+    /**
+     * Merges two matrices by adding the second below the first.
+     * Both matrices need to have the same dimensions.
+     * @param A IntVar[][], first matrix.
+     * @param B IntVar[][], second matrix.
+     * @return IntVar[][], A over B.
+     */
+
     private static IntVar[][] mergeMatrices(IntVar[][] A, IntVar[][] B){
-        int rows = A.length+B.length;
-        int columns = A[0].length;
-        int indexRow=0;
-        IntVar[][] matrix = new IntVar[rows][columns];
-        for(int i = 0; i < A.length; i++){
-            for(int e = 0; e < A[0].length; e++){
-                matrix[indexRow][e] = A[i][e];
+        if(A.length==B.length && A[0].length==B[0].length) {
+            int rows = A.length + B.length;
+            int columns = A[0].length;
+            int indexRow = 0;
+            IntVar[][] matrix = new IntVar[rows][columns];
+            for (int i = 0; i < A.length; i++) {
+                for (int e = 0; e < A[0].length; e++) {
+                    matrix[indexRow][e] = A[i][e];
+                }
+                indexRow++;
             }
-            indexRow++;
-        }
-        for(int i = 0; i < B.length; i++){
-            for(int e = 0; e < B[0].length; e++){
-                matrix[indexRow][e] = B[i][e];
+            for (int i = 0; i < B.length; i++) {
+                for (int e = 0; e < B[0].length; e++) {
+                    matrix[indexRow][e] = B[i][e];
+                }
+                indexRow++;
             }
-            indexRow++;
+            return matrix;
         }
-        return matrix;
+        throw(new IllegalArgumentException("Matrices not compatible for this type of merge."));
     }
+
+    /**
+     * Merges to vectors of IntVar to one single vector.
+     * @param v1 IntVar[], first vector.
+     * @param v2 IntVar[], second vector
+     * @return IntVar[], vector containing all elements in v1 and v2 in the same order.
+     */
 
     private static IntVar[] mergeVectors(IntVar[] v1, IntVar[] v2){
         int size = v1.length+v2.length;
@@ -161,6 +189,11 @@ public class PizzaMaster {
             }
         return merged;
     }
+
+    /**
+     * Sorts the array in descending order. Highest to lowest.
+     * @param array int[], vector to be sorted.
+     */
 
     public static void bubbleSort(int[] array) {
 
@@ -180,6 +213,12 @@ public class PizzaMaster {
         }
     }
 
+    /**
+     * Returns the sum of an array.
+     * @param array int[], array to be summed.
+     * @return Integer, sum of array.
+     */
+
     public static int sum(int[] array){
         int sum = 0;
         for(int i = 0; i < array.length; i++){
@@ -187,6 +226,11 @@ public class PizzaMaster {
         }
         return sum;
     }
+
+    /**
+     * Runs the selected example if it exists.
+     * @param ex Integer, example to run.
+     */
 
     public static void example(int ex ){
         switch(ex) {
@@ -214,8 +258,14 @@ public class PizzaMaster {
                 int[] free3 =   {1, 1, 1, 0};
                 solve(n3, price3, m3, buy3, free3);
                 break;
+            default: System.err.println("Example " + ex + " is not implemented.");
         }
     }
+
+    /**
+     * Print a matrix of IntVar.
+     * @param matrix IntVar[][], matrix to print.
+     */
 
     private static void printMatrix(IntVar[][] matrix) {
         for (int i = 0; i < matrix.length; i++) {
@@ -226,6 +276,10 @@ public class PizzaMaster {
         }
     }
 
+    /**
+     * Prints a vector of IntVar.
+     * @param vector IntVar[], vector to print.
+     */
     private  static void printVector(IntVar[] vector){
         for(int i = 0; i < vector.length; i ++){
             System.out.print(vector[i].value()+" ");
@@ -233,6 +287,10 @@ public class PizzaMaster {
         System.out.print("\n");
     }
 
+    /**
+     * Print a vector of integers.
+     * @param vector int[], vector to print.
+     */
     private  static void printIntVector(int[] vector){
         for(int i = 0; i < vector.length; i ++){
             System.out.print(vector[i]+" ");

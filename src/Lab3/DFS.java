@@ -1,5 +1,5 @@
 package Lab3; /**
- * Lab3.SimpleDFS.java
+ * Lab3.DFS.java
  * This file is part of JaCoP.
  * <p>
  * JaCoP is a Java Constraint Programming solver.
@@ -43,7 +43,7 @@ import java.util.LinkedList;
  * @version 4.1
  */
 
-public class SimpleDFS {
+public class DFS {
 
     boolean trace = false;
 
@@ -72,7 +72,7 @@ public class SimpleDFS {
      */
     public IntVar costVariable = null;
 
-    public SimpleDFS(Store s) {
+    public DFS(Store s) {
         store = s;
     }
 
@@ -227,7 +227,7 @@ public class SimpleDFS {
          */
         public IntVar selectVariable(IntVar[] v) {
             if (v.length != 0) {
-                //Lab3.SimpleDFS
+                //Lab3.DFS
                 if(example==0){
                     searchVariables = new IntVar[v.length-1];
                     for (int i = 0; i < v.length-1; i++) {
@@ -235,8 +235,9 @@ public class SimpleDFS {
                     }
 
                     return v[0];
-                }//Selects minimum domain first.
+                }
                 if(select){
+                    //Selects minimum domain first.
                     int smallest = Integer.MAX_VALUE;
                     int index = 0;
                     //Find the smallest domain.
