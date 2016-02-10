@@ -202,11 +202,13 @@ public class SimpleDFS {
         IntVar[] searchVariables;
         int value;
         /**
+         * @param example ,
          * Choose which example to do.
          */
-        int example = 2;
+        int example = 1;
         /**
-         * Choose whether to select on smallest domain or not
+         * @param select,
+         * Choose whether to select on smallest domain or not.
          * (default is to select on input order).
          */
         boolean select = false;
@@ -298,31 +300,21 @@ public class SimpleDFS {
             switch(example){
                 case 0: return v.min();
                 case 1: return (v.max()+v.min())/2;
-                case 2: if((v.max()+v.min())%2==0){
-                    return (v.max()+v.min())/2;
-                }
-                    return (v.max()+v.min()+1)/2;
+                case 2: return (v.max()+v.min())%2==0 ? (v.max()+v.min())/2 : (v.max()+v.min()+1)/2; //If odd, add one.
+                default: return v.min();
             }
-                return v.min();
         }
 
         /**
          * Assigning constraint dependant on example.
          */
         public PrimitiveConstraint getConstraint() {
-            PrimitiveConstraint pc = new XeqC(var, value);
             switch (example) {
-                case 0:
-                    pc = new XeqC(var, value); //Lab3.SimpleDFS
-                break;
-                case 1:
-                    pc = new XlteqC(var, value); // X <= C
-                break;
-                case 2:
-                    pc = new XgteqC(var, value); // X >= C
-                break;
+                case 0: return new XeqC(var, value);
+                case 1: return new XlteqC(var, value);
+                case 2: return new XgteqC(var, value);
+                default:  return new XeqC(var, value);
             }
-            return pc;
         }
     }
 }
