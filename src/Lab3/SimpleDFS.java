@@ -1,5 +1,5 @@
-/**
- * SimpleDFS.java
+package Lab3; /**
+ * Lab3.SimpleDFS.java
  * This file is part of JaCoP.
  * <p>
  * JaCoP is a Java Constraint Programming solver.
@@ -205,7 +205,7 @@ public class SimpleDFS {
         int example = 2;
         //Choose whether to select on smallest domain or not
         //(default is to select on input order).
-        boolean select = true;
+        boolean select = false;
 
         public ChoicePoint(IntVar[] v) {
             var = selectVariable(v);
@@ -221,7 +221,7 @@ public class SimpleDFS {
          */
         public IntVar selectVariable(IntVar[] v) {
             if (v.length != 0) {
-                //SimpleDFS
+                //Lab3.SimpleDFS
                 if(example==0){
                     searchVariables = new IntVar[v.length-1];
                     for (int i = 0; i < v.length-1; i++) {
@@ -260,7 +260,7 @@ public class SimpleDFS {
                             searchVariables[i] = v[i];
                         }
                     }
-                    //Return the element with smallest value.
+                    //Return the element with smallest domain.
                     return v[index];
                 }
                 //Selects on input order.
@@ -303,13 +303,13 @@ public class SimpleDFS {
         }
 
         /**
-         * Assigning constraing dependant on example.
+         * Assigning constraint dependant on example.
          */
         public PrimitiveConstraint getConstraint() {
             PrimitiveConstraint pc = new XeqC(var, value);
             switch (example) {
                 case 0:
-                    pc = new XeqC(var, value); //SimpleDFS
+                    pc = new XeqC(var, value); //Lab3.SimpleDFS
                 break;
                 case 1:
                     pc = new XlteqC(var, value); // X <= C

@@ -1,3 +1,5 @@
+package Lab1;
+
 import org.jacop.constraints.*;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;

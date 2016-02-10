@@ -1,5 +1,5 @@
-/**
- *  Golomb.java 
+package Lab3; /**
+ *  Lab3.Golomb.java
  *  This file is part of JaCoP.
  *
  *  JaCoP is a Java Constraint Programming solver. 
@@ -40,28 +40,22 @@ import org.jacop.constraints.XplusClteqZ;
 import org.jacop.constraints.XplusYeqZ;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
-import org.jacop.search.DepthFirstSearch;
-import org.jacop.search.IndomainMin;
-import org.jacop.search.InputOrderSelect;
-import org.jacop.search.PrintOutListener;
-import org.jacop.search.Search;
-import org.jacop.search.SelectChoicePoint;
 
 /**
  * 
- * It models a Golomb ruler problem.
+ * It models a Lab3.Golomb ruler problem.
  * 
  * @author Radoslaw Szymanek and Krzysztof Kuchcinski
  *
  * 
- * Golomb ruler is a special sequence of natural numbers
+ * Lab3.Golomb ruler is a special sequence of natural numbers
  * an example is 0 1 4 6
  *
- * a sequence is a Golomb ruler if all differences are different
+ * a sequence is a Lab3.Golomb ruler if all differences are different
  * (1-0), (4-0), (6-0), (4-1), (6-1), (6-4)
  * 1 4 6 3 5 2
  * All differences above have different values
- * A Golomb ruler is optimal if the length of it (the last mark)
+ * A Lab3.Golomb ruler is optimal if the length of it (the last mark)
  * has the smallest possible value
  * The presented ruler with 4 marks of length 6 is optimal
  */
@@ -88,7 +82,7 @@ public class Golomb {
     public ArrayList<IntVar> subs = new ArrayList<IntVar>();
 	
     /**
-     * It executes the program which computes the optimal Golomb ruler. 
+     * It executes the program which computes the optimal Lab3.Golomb ruler.
      * 
      * @param args the first argument specifies the number of marks, the second argument specifies the upper bound of the optimal solution.
      */
@@ -102,7 +96,7 @@ public class Golomb {
 
     public void model() {
 
-	System.out.println("Program to solve Golomb mark problem - length "
+	System.out.println("Program to solve Lab3.Golomb mark problem - length "
 			   + noMarks);
 
 	store = new Store();
@@ -117,7 +111,7 @@ public class Golomb {
 
 	    // Impose constraints that each consequtive number
 	    // is larger than the previous one
-	    // Golomb ruler is an ordered sequence of numbers
+	    // Lab3.Golomb ruler is an ordered sequence of numbers
 	    if (i > 0)
 		store.impose(new XltY(numbers[i - 1], numbers[i]));
 	    else
