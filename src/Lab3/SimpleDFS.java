@@ -201,10 +201,14 @@ public class SimpleDFS {
         IntVar var;
         IntVar[] searchVariables;
         int value;
-        //Choose which example to do.
+        /**
+         * Choose which example to do.
+         */
         int example = 2;
-        //Choose whether to select on smallest domain or not
-        //(default is to select on input order).
+        /**
+         * Choose whether to select on smallest domain or not
+         * (default is to select on input order).
+         */
         boolean select = false;
 
         public ChoicePoint(IntVar[] v) {
