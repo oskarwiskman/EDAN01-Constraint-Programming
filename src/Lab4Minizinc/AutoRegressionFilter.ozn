@@ -1,0 +1,5 @@
+output [show(start),show(cycles),show(end)];
+int: N = 27;
+array [0..N] of int: cycles;
+array [0..N] of int: start;
+int: end;

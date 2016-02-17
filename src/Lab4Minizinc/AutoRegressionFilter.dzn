@@ -1,10 +1,10 @@
 % inputs depending on subtask
-nbrNodes = 28; N = nbrNodes - 1; nbrMuls = 1; nbrAdds = 1; addCycles = 1; mulCycles = 2; nbrAddNodes = 11; nbrMulNodes = 15;
+nbrNodes = 28; N = nbrNodes - 1; nbrMuls = 2; nbrAdds = 1;
+addCycles = 1; mulCycles = 2; nbrAddNodes = 11; nbrMulNodes = 15;
 % setting up the model
-array[0..N] of set of int : connections;
-set of int : addNodes = 8..13 union 18..19 union 24..27;
-set of int : mulNodes = 0..N diff addNodes;
-int maxTime = if addCycles > mulCycles then nbrNodes*addCycles else nbrNodes*mulCycles endif;
+addNodes = 8..13 union 18..19 union 24..27;
+mulNodes = 0..N diff addNodes;
+maxTime = if addCycles > mulCycles then nbrNodes*addCycles else nbrNodes*mulCycles endif;
 connections = array1d(0..N,  
 [{},              %index 0
 {},
