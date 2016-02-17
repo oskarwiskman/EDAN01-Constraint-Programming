@@ -1,11 +1,9 @@
-package Lab1;
+package Lab1Java;
 
 import org.jacop.constraints.*;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 import org.jacop.search.*;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 public class PizzaMaster {
     public static void main(String[] args) {
@@ -95,7 +93,7 @@ public class PizzaMaster {
         //Weight the paid pizzas with the cost.
         store.impose(new SumWeight(paidPizzas, price, cost));
 
-
+        System.out.println(store);
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
         //select on voucher matrices.
         SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(mergeMatrices(voucherBought, voucherFree), null, new IndomainMin<IntVar>());

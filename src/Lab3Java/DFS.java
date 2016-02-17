@@ -1,5 +1,5 @@
-package Lab3; /**
- * Lab3.DFS.java
+package Lab3Java; /**
+ * Lab3Java.DFS.java
  * This file is part of JaCoP.
  * <p>
  * JaCoP is a Java Constraint Programming solver.
@@ -33,8 +33,6 @@ import org.jacop.core.FailException;
 import org.jacop.core.IntDomain;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
-
-import java.util.LinkedList;
 
 /**
  * Implements Simple Depth First Search .
@@ -80,12 +78,14 @@ public class DFS {
 
     public int wrongDec = 0;
 
+    public static int SIMPLE = 0, SPLIT1 = 1, SPLIT2 = 2;
+
 
     /**
      * This function is called recursively to assign variables one by one.
      */
     public boolean label(IntVar[] vars) {
-
+        nbrNodes++;
         if (trace) {
             for (int i = 0; i < vars.length; i++)
                 System.out.print(vars[i] + " ");
@@ -112,6 +112,7 @@ public class DFS {
 
         if (!consistent) {
             // Failed leaf of the search tree
+            wrongDec++;
             return false;
         } else { // consistent
 
@@ -128,7 +129,6 @@ public class DFS {
             }
 
             choice = new ChoicePoint(vars);
-            nbrNodes++;
 
             levelUp();
 
@@ -146,7 +146,6 @@ public class DFS {
                 restoreLevel();
 
                 store.impose(new Not(choice.getConstraint()));
-                wrongDec++;
                 // negated choice point imposed.
 
                 consistent = label(vars);
@@ -205,7 +204,7 @@ public class DFS {
          * @param example ,
          * Choose which example to do.
          */
-        int example = 1;
+        int example = SPLIT1;
         /**
          * @param select,
          * Choose whether to select on smallest domain or not.
@@ -225,10 +224,10 @@ public class DFS {
         /**
          * example variable selection; input order
          */
+
         public IntVar selectVariable(IntVar[] v) {
             if (v.length != 0) {
-                //Lab3.DFS
-                if(example==0){
+                if(example==SIMPLE){
                     searchVariables = new IntVar[v.length-1];
                     for (int i = 0; i < v.length-1; i++) {
                         searchVariables[i] = v[i+1];
@@ -271,16 +270,16 @@ public class DFS {
                     return v[index];
                 }
                 //Selects on input order.
-                //If first element is determined remove it.
                 if (v[0].min() == v[0].max()) {
+                    //First element is determined, remove it.
                     searchVariables = new IntVar[v.length - 1];
                     for (int i = 0; i < v.length - 1; i++) {
                         searchVariables[i] = v[i + 1];
                     }
 
                 }
-                //Else put them back.
                 else {
+                    //Put them back.
                     searchVariables = new IntVar[v.length];
                     for (int i = 0; i < v.length; i++) {
                         searchVariables[i] = v[i];

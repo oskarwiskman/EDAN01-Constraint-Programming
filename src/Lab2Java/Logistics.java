@@ -1,11 +1,9 @@
-package Lab2;
+package Lab2Java;
 
 import org.jacop.constraints.*;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 import org.jacop.search.*;
-
-import java.util.ArrayList;
 
 public class Logistics {
     public static void main(String[] args) {
