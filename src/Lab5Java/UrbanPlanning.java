@@ -6,16 +6,17 @@ import org.jacop.core.Store;
 import org.jacop.search.*;
 
 import static Lab1Java.PizzaMaster.printVector;
-import static Lab2Java.Logistics.getColumn;
-import static Lab2Java.Logistics.printMatrix;
-import static Lab2Java.Logistics.vectorizeIntVar;
+import static Lab2Java.Logistics.*;
 
 public class UrbanPlanning {
+
+    public static int EXAMPLE_NBR = 3;
+
     public static void main(String[] args) {
         long T1, T2, T;
 
         T1 = System.currentTimeMillis();
-        example(1);
+        example(EXAMPLE_NBR);
         T2 = System.currentTimeMillis();
         T = T2 - T1;
         System.out.println("\n\t*** Execution time = " + T + " ms");
@@ -29,7 +30,7 @@ public class UrbanPlanning {
         IntVar[][] grid = new IntVar[n][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                grid[i][j] = new IntVar(store, "Type"+i*10+j, 0, 1);
+                grid[i][j] = new IntVar(store, "Type" + i * 10 + j, 0, 1);
             }
         }
         //Number of residential buildings needs to be correct. Since value is binary, the
@@ -39,46 +40,62 @@ public class UrbanPlanning {
 
         //Create vector to hold the indices in 'point_distribution' corresponding
         //to the number of residential buildings (1's) in each row/column.
-        IntVar[] resiSum = new IntVar[n*2];
-        for(int i = 0; i < n; i ++){
+        IntVar[] resiSum = new IntVar[n * 2];
+        for (int i = 0; i < n; i++) {
             IntVar sumRow = new IntVar(store, 0, n);
             store.impose(new SumInt(store, grid[i], "==", sumRow));
             resiSum[i] = sumRow;
             IntVar sumCol = new IntVar(store, 0, n);
             store.impose(new SumInt(store, getColumn(grid, i), "==", sumCol));
-            resiSum[i+n] = sumCol;
+            resiSum[i + n] = sumCol;
         }
 
         //Set the scores for each row and column.
         //(scores[0] represents score for row 0, scores[n] represents score for column 0 etc.)
         //Shift by -1 to accommodate vectors starting at 0 in java.
-        IntVar[] scores = new IntVar[n*2];
-        for(int i = 0; i < n*2; i++){
-            IntVar score = new IntVar(store, -(n*n*2), n*n*2);
+        IntVar[] scores = new IntVar[n * 2];
+        for (int i = 0; i < n * 2; i++) {
+            IntVar score = new IntVar(store, -(n * n * 2), n * n * 2);
             store.impose(new Element(resiSum[i], point_distribution, score, -1));
             scores[i] = score;
         }
+//        if (EXAMPLE_NBR == 3) {
+//            for (int i = 0; i < n - 1; i++) {
+//                IntVar sumRow1 = new IntVar(store, 0, n);
+//                IntVar sumRow2 = new IntVar(store, 0, n);
+//
+//                store.impose(new SumInt(store, grid[i], "==", sumRow1));
+//                store.impose(new SumInt(store, grid[i + 1], "==", sumRow2));
+//                store.impose(new XgteqY(sumRow1, sumRow2));
+//
+//                IntVar sumCol1 = new IntVar(store, 0, n);
+//                IntVar sumCol2 = new IntVar(store, 0, n);
+//                store.impose(new SumInt(store, getColumn(grid, i), "==", sumCol1));
+//                store.impose(new SumInt(store, getColumn(grid, i + 1), "==", sumCol2));
+//                store.impose(new XgteqY(sumCol1, sumCol2));
+//            }
+//        }
 
         //Add constraints for lexicographical ordering to prevent permutations of the same solution.
-        for(int i = 1; i < n-1; i ++){
-            store.impose(new LexOrder(grid[i], grid[i+1]));
-            store.impose(new LexOrder(getColumn(grid, i), getColumn(grid, i+1)));
+        for (int i = 1; i < n - 1; i++) {
+            store.impose(new LexOrder(grid[i], grid[i + 1]));
+            store.impose(new LexOrder(getColumn(grid, i), getColumn(grid, i + 1)));
         }
         //Max is what we want to find.
-        IntVar maxScore = new IntVar(store, -(n*n*2), n*n*2);
+        IntVar maxScore = new IntVar(store, -(n * n * 2), n * n * 2);
         store.impose(new SumInt(store, scores, "==", maxScore));
 
         //Search is more efficient if we minimize, thus we create an opposite of maxScore (minScore)
         //and try to minimize that. This will by implication maximize maxScore.
-        IntVar minScore = new IntVar(store, -(n*n*2), n*n*2);
+        IntVar minScore = new IntVar(store, -(n * n * 2), n * n * 2);
         store.impose(new XplusYeqC(maxScore, minScore, 0));
 
         //Perform the search.
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
         SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(grid, null, new IndomainMin<IntVar>());
 
-//        search.setSolutionListener(new PrintOutListener<IntVar>());
-//        search.getSolutionListener().searchAll(true);
+        search.setSolutionListener(new PrintOutListener<IntVar>());
+        search.getSolutionListener().searchAll(true);
 
         boolean result = search.labeling(store, select, minScore);
 
