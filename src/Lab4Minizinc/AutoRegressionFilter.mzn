@@ -18,6 +18,7 @@ var 0..maxTime : end;
 
 array[0..nbrAddNodes] of var 0..maxTime : startAdd;
 array[0..nbrMulNodes] of var 0..maxTime : startMul;
+
 array[0..nbrAddNodes] of var 0..maxTime : addDur = array1d(0..nbrAddNodes,
  [addCycles | i in 0..nbrAddNodes]);
 array[0..nbrMulNodes] of var 0..maxTime : mulDur = array1d(0..nbrMulNodes,
@@ -30,8 +31,8 @@ array[0..nbrMulNodes] of int : mullers = array1d(0..nbrMulNodes,
  [1 | i in 0..nbrMulNodes ]);
 
 %Available components at current tier.
-array[0..nbrAddNodes] of var 0..nbrAdds : availableAdders;
-array[0..nbrMulNodes] of var 0..nbrMuls : availableMullers;
+array[0..nbrAddNodes] of var 1..nbrAdds : availableAdders;
+array[0..nbrMulNodes] of var 1..nbrMuls : availableMullers;
 
 /* ----------------------------- Constraints -----------------------------*/
 
@@ -67,11 +68,11 @@ constraint
   forall (i in index_set(cycles)) (
     start[i] + cycles[i] <= end
   );
+
 solve :: seq_search([
-    int_search(startAdd, smallest, indomain_min, complete),
-    int_search(startMul, smallest, indomain_min, complete),
-    int_search([end], input_order, indomain_min, complete)  
+    int_search(startAdd++startMul, first_fail, indomain_min, complete),
+    int_search(availableAdders++availableMullers, first_fail, indomain_min, complete)
   ])
 minimize end;
 
-output[ show(start), show(cycles), show(end) ];
+output[ show(start), show(cycles), show(end), show(availableAdders), show(availableMullers) ];

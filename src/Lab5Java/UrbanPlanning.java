@@ -5,75 +5,113 @@ import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 import org.jacop.search.*;
 
+import static Lab1Java.PizzaMaster.printVector;
+import static Lab2Java.Logistics.getColumn;
+import static Lab2Java.Logistics.printMatrix;
+import static Lab2Java.Logistics.vectorizeIntVar;
+
 public class UrbanPlanning {
-	public static void main(String[] args) {
-		long T1, T2, T;
+    public static void main(String[] args) {
+        long T1, T2, T;
 
-		T1 = System.currentTimeMillis();
-		example(1);
-		T2 = System.currentTimeMillis();
-		T = T2 - T1;
-		System.out.println("\n\t*** Execution time = " + T + " ms");
-		
-	}
-		public void solve(int n, int n_commercial, int n_resedential, int[] point_distribution){
-			Store store = new Store();
+        T1 = System.currentTimeMillis();
+        example(3);
+        T2 = System.currentTimeMillis();
+        T = T2 - T1;
+        System.out.println("\n\t*** Execution time = " + T + " ms");
 
-			//konstruerar 2 symetriska matriser [row][column]
-			//1 = residense 0= commercial
-			IntVar[][] grid = new IntVar[n][n]; //the grid of the area
-			IntVar[][] symgrid = new IntVar[n][n]; // does it need to be symmetric? not in the example..
-			
-			for(int i = 0; i<n; i++){
-				for( int j= 0; j<n; j++){
-					grid[i][j] = new intvar(store, "type" +i+j ,0, 1);
-					symgrid[j][i] = new intvar(store, "type" +i+j ,0, 1);
-					store.impose(new XeqY(grid[i][j]), symgrid[j][i]);
-				}
-			}
-			//contraint that nbr res in grid = n_resedential and nr commercial = n_commercial
-			Intvar resInGrid = new Intvar(store, "nrResInGrid", n_resedential, n_resedential);
-//			Intvar comInGrid = new Intvar(store, "nrComInGrid", n_commercial, n_commercial); //överflödig?
-			Intvar[] gridsum = new Intvar[n*2];
-			int index=0;
-			for(int i=0; i<gridSum.length; i++){
-				for(int j=0; j<gridSum.length; j++){
-					gridSum[index] = grid[i][j];
-					index++;
-				}
-			}
-			store.impose(new sum(gridSum, resInGrid));
-			
-			//Ansätt poäng beroende på type new intvar(-n,n)
-			
-			//poäng i rader i area = kolumn i symarea??  
-			
-		}
-		public static void example(int ex ){
-	        switch(ex) {
-	            case 1:
-	                int n = 5;
-	                int n_ commercial = 13;
-	                int n_residential = 12;
-	                int[] point_distribution = {-5,-4,-3,3,4,5};
-	                solve(n, n_commercial, n_resedential, point_distribution);
-	                break;
-	            case 2:
-	            	 int n = 5;
-		                int n_ commercial = 7;
-		                int n_residential = 18;
-		                int[] point_distribution = {-5,-4,-3,3,4,5};
-		                solve(n, n_commercial, n_resedential, point_distribution);
-	                break;
-	            case 3:
-	            	 int n = 7;
-		                int n_ commercial = 20;
-		                int n_residential = 29;
-		                int[] point_distribution = {-7,-6,-5,-4,-3,3,4,5,6,7};
-		                solve(n, n_commercial, n_resedential, point_distribution);
-	                break;
-	            default: System.err.println("Example " + ex + " is not implemented.");
-	        }
-	    }
+    }
+
+    public static void solve(int n, int n_commercial, int n_residential, int[] point_distribution) {
+        Store store = new Store();
+
+        //Model the area with a grid. 1 represents a residential building and 0 represents a commercial building.
+        IntVar[][] grid = new IntVar[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                grid[i][j] = new IntVar(store, "Type"+i*10+j, 0, 1);
+            }
+        }
+        //Number of residential buildings needs to be correct. Since value is binary number of commercial buildings
+        //will be implicit.
+        IntVar resInGrid = new IntVar(store, "nrResInGrid", n_residential, n_residential);
+        store.impose(new SumInt(store, vectorizeIntVar(grid), "==", resInGrid));
+
+        IntVar[] resiSum = new IntVar[n*2];
+        for(int i = 0; i < n; i ++){
+            IntVar sumRow = new IntVar(store, 0, n);
+            store.impose(new SumInt(store, grid[i], "==", sumRow));
+            resiSum[i] = sumRow;
+            IntVar sumCol = new IntVar(store, 0, n);
+            store.impose(new SumInt(store, getColumn(grid, i), "==", sumCol));
+            resiSum[i+n] = sumCol;
+        }
+
+        IntVar[] scores = new IntVar[n*2];
+
+        for(int i = 0; i < n*2; i++){
+            IntVar score = new IntVar(store, -(n*n*2), n*n*2);
+            store.impose(new Element(resiSum[i], point_distribution, score, -1));
+            scores[i] = score;
+        }
+
+        for(int i = 1; i < n-1; i ++){
+            store.impose(new LexOrder(grid[i], grid[i+1]));
+            store.impose(new LexOrder(getColumn(grid, i), getColumn(grid, i+1)));
+        }
+
+        IntVar maxScore = new IntVar(store, -(n*n*2), n*n*2);
+
+        store.impose(new SumInt(store, scores, "==", maxScore));
+
+        IntVar minScore = new IntVar(store, -(n*n*2), n*n*2);
+
+        store.impose(new XplusYeqC(maxScore, minScore, 0));
+        Search<IntVar> search = new DepthFirstSearch<IntVar>();
+        SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(grid, null, new IndomainMin<IntVar>());
+
+//        search.setSolutionListener(new PrintOutListener<IntVar>());
+//        search.getSolutionListener().searchAll(true);
+
+        boolean result = search.labeling(store, select, minScore);
+
+        if (result) {
+            System.out.println("Solution : ");
+            System.out.println("Maximum grid score is: " + maxScore.value());
+            printMatrix(grid);
+        } else {
+            System.out.println("No solution found.");
+        }
+
+
+    }
+
+    public static void example(int ex) {
+        switch (ex) {
+            case 1:
+                int n1 = 5;
+                int n1_commercial = 13;
+                int n1_residential = 12;
+                int[] point_distribution1 = {-5, -4, -3, 3, 4, 5};
+                solve(n1, n1_commercial, n1_residential, point_distribution1);
+                break;
+            case 2:
+                int n2 = 5;
+                int n_commercial2 = 7;
+                int n_residential2 = 18;
+                int[] point_distribution2 = {-5, -4, -3, 3, 4, 5};
+                solve(n2, n_commercial2, n_residential2, point_distribution2);
+                break;
+            case 3:
+                int n3 = 7;
+                int n_commercial3 = 20;
+                int n_residential3 = 29;
+                int[] point_distribution3 = {-7, -6, -5, -4, -3, 3, 4, 5, 6, 7};
+                solve(n3, n_commercial3, n_residential3, point_distribution3);
+                break;
+            default:
+                System.err.println("Example " + ex + " is not implemented.");
+        }
+    }
 
 }

@@ -1,5 +1,5 @@
 % inputs depending on subtask
-nbrNodes = 28; N = nbrNodes - 1; nbrMuls = 2; nbrAdds = 1;
+nbrNodes = 28; N = nbrNodes - 1; nbrAdds = 1; nbrMuls = 3;
 addCycles = 1; mulCycles = 2; nbrAddNodes = 11; nbrMulNodes = 15;
 % setting up the model
 addNodes = 8..13 union 18..19 union 24..27;

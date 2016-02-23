@@ -1,5 +1,9 @@
-output [show(start),show(cycles),show(end)];
+output [show(start),show(cycles),show(end),show(availableAdders),show(availableMullers)];
 int: N = 27;
+int: nbrAddNodes = 11;
+int: nbrMulNodes = 15;
 array [0..N] of int: cycles;
 array [0..N] of int: start;
 int: end;
+array [0..nbrAddNodes] of int: availableAdders;
+array [0..nbrMulNodes] of int: availableMullers;
