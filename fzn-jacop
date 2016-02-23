@@ -1,2 +1,0 @@
-#!/bin/bash
-exec java -server -cp /usr/local/cs/EDAN01/jacop.jar -Xmx1500M org.jacop.fz.Fz2jacop "$@"
