@@ -59,6 +59,7 @@ public class UrbanPlanning {
             store.impose(new Element(resiSum[i], point_distribution, score, -1));
             scores[i] = score;
         }
+        //Optimization by grouping solutions to the upper left corner of the grid.
 //        if (EXAMPLE_NBR == 3) {
 //            for (int i = 0; i < n - 1; i++) {
 //                IntVar sumRow1 = new IntVar(store, 0, n);
