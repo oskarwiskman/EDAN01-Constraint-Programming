@@ -278,7 +278,7 @@ public class PizzaMaster {
      * Prints a vector of IntVar.
      * @param vector IntVar[], vector to print.
      */
-    private  static void printVector(IntVar[] vector){
+    public static void printVector(IntVar[] vector){
         for(int i = 0; i < vector.length; i ++){
             System.out.print(vector[i].value()+" ");
         }

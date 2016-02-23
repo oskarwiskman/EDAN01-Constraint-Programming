@@ -117,7 +117,7 @@ public class Logistics {
         return vector;
     }
 
-    private static IntVar[] getColumn(IntVar[][] matrix, int i) {
+    public static IntVar[] getColumn(IntVar[][] matrix, int i) {
         IntVar[] col = new IntVar[matrix.length];
         for (int j = 0; j < matrix.length; j++) {
             col[j] = matrix[j][i];
@@ -125,7 +125,7 @@ public class Logistics {
         return col;
     }
 
-    private static void printMatrix(IntVar[][] matrix) {
+    public static void printMatrix(IntVar[][] matrix) {
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[0].length; j++) {
                 System.out.print(matrix[i][j].value() + " ");
