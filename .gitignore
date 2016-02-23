@@ -29,6 +29,9 @@ local.properties
 .settings/
 .loadpath
 
+#libraries
+lib/
+
 # Eclipse Core
 .project
 
