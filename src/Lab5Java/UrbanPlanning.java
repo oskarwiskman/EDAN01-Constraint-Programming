@@ -10,7 +10,7 @@ import static Lab2Java.Logistics.*;
 
 public class UrbanPlanning {
 
-    public static int EXAMPLE_NBR = 3;
+    public static int EXAMPLE_NBR = 1;
 
     public static void main(String[] args) {
         long T1, T2, T;
@@ -110,11 +110,7 @@ public class UrbanPlanning {
         if (result) {
             System.out.println("Solution : ");
             System.out.println("Maximum grid score is: " + maxScore.value());
-            printMatrix(grid);
-            System.out.println("Scores:");
-            printVector(scores);
-            System.out.println("ResiSum:");
-            printVector(resiSum);
+            prettyPrint(grid);
         } else {
             System.out.println("No solution found.");
         }
@@ -148,6 +144,37 @@ public class UrbanPlanning {
             default:
                 System.err.println("Example " + ex + " is not implemented.");
         }
+    }
+
+    private static void prettyPrint(IntVar[][] matrix) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                if (matrix[i][j].value() == 0) {
+                    sb.append("\t_\t\t");
+                } else {
+                    sb.append("\t ,__\t");
+                }
+            }
+            sb.append("\n");
+            for (int j = 0; j < matrix[0].length; j++) {
+                if (matrix[i][j].value() == 0) {
+                    sb.append("\t \\###| \t");
+                } else {
+                    sb.append("\t/ \\__\\\t");
+                }
+            }
+            sb.append("\n");
+            for (int j = 0; j < matrix[0].length; j++) {
+                if (matrix[i][j].value() == 0) {
+                    sb.append("\t  o o  \t");
+                } else {
+                    sb.append("\t|_|[]|\t");
+                }
+            }
+            sb.append("\n\n");
+        }
+        System.out.print(sb.toString());
     }
 
 }
