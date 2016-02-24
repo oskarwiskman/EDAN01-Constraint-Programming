@@ -33,6 +33,7 @@ public class UrbanPlanning {
                 grid[i][j] = new IntVar(store, "Type" + i * 10 + j, 0, 1);
             }
         }
+
         //Number of residential buildings needs to be correct. Since value is binary, the
         //number of commercial buildings will be implicitly correct.
         IntVar resInGrid = new IntVar(store, "nrResInGrid", n_residential, n_residential);
@@ -59,29 +60,33 @@ public class UrbanPlanning {
             store.impose(new Element(resiSum[i], point_distribution, score, -1));
             scores[i] = score;
         }
-        //Optimization by grouping solutions to the upper left corner of the grid.
-//        if (EXAMPLE_NBR == 3) {
-//            for (int i = 0; i < n - 1; i++) {
-//                IntVar sumRow1 = new IntVar(store, 0, n);
-//                IntVar sumRow2 = new IntVar(store, 0, n);
-//
-//                store.impose(new SumInt(store, grid[i], "==", sumRow1));
-//                store.impose(new SumInt(store, grid[i + 1], "==", sumRow2));
-//                store.impose(new XgteqY(sumRow1, sumRow2));
-//
-//                IntVar sumCol1 = new IntVar(store, 0, n);
-//                IntVar sumCol2 = new IntVar(store, 0, n);
-//                store.impose(new SumInt(store, getColumn(grid, i), "==", sumCol1));
-//                store.impose(new SumInt(store, getColumn(grid, i + 1), "==", sumCol2));
-//                store.impose(new XgteqY(sumCol1, sumCol2));
-//            }
-//        }
 
         //Add constraints for lexicographical ordering to prevent permutations of the same solution.
         for (int i = 1; i < n - 1; i++) {
             store.impose(new LexOrder(grid[i], grid[i + 1]));
             store.impose(new LexOrder(getColumn(grid, i), getColumn(grid, i + 1)));
         }
+
+        //Optimization by grouping solutions to the upper left corner of the grid.
+        //Not usable when grid is too small since not enough solutions exist to provide
+        //an optimal one when stacking this optimization with LexOrder.
+        if (EXAMPLE_NBR == 3) {
+            for (int i = 0; i < n - 1; i++) {
+                IntVar sumRow1 = new IntVar(store, 0, n);
+                IntVar sumRow2 = new IntVar(store, 0, n);
+
+                store.impose(new SumInt(store, grid[i], "==", sumRow1));
+                store.impose(new SumInt(store, grid[i + 1], "==", sumRow2));
+                store.impose(new XgteqY(sumRow1, sumRow2));
+
+                IntVar sumCol1 = new IntVar(store, 0, n);
+                IntVar sumCol2 = new IntVar(store, 0, n);
+                store.impose(new SumInt(store, getColumn(grid, i), "==", sumCol1));
+                store.impose(new SumInt(store, getColumn(grid, i + 1), "==", sumCol2));
+                store.impose(new XgteqY(sumCol1, sumCol2));
+            }
+        }
+        
         //Max is what we want to find.
         IntVar maxScore = new IntVar(store, -(n * n * 2), n * n * 2);
         store.impose(new SumInt(store, scores, "==", maxScore));
@@ -95,8 +100,8 @@ public class UrbanPlanning {
         Search<IntVar> search = new DepthFirstSearch<IntVar>();
         SelectChoicePoint<IntVar> select = new SimpleMatrixSelect<IntVar>(grid, null, new IndomainMin<IntVar>());
 
-        search.setSolutionListener(new PrintOutListener<IntVar>());
-        search.getSolutionListener().searchAll(true);
+//        search.setSolutionListener(new PrintOutListener<IntVar>());
+//        search.getSolutionListener().searchAll(true);
 
         boolean result = search.labeling(store, select, minScore);
 
@@ -104,6 +109,10 @@ public class UrbanPlanning {
             System.out.println("Solution : ");
             System.out.println("Maximum grid score is: " + maxScore.value());
             printMatrix(grid);
+            System.out.println("Scores:");
+            printVector(scores);
+            System.out.println("ResiSum:");
+            printVector(resiSum);
         } else {
             System.out.println("No solution found.");
         }
@@ -131,7 +140,7 @@ public class UrbanPlanning {
                 int n3 = 7;
                 int n_commercial3 = 20;
                 int n_residential3 = 29;
-                int[] point_distribution3 = {-7, -6, -5, -4, -3, 3, 4, 5, 6, 7};
+                int[] point_distribution3 = {-7, -6, -5, -4, 4, 5, 6, 7};
                 solve(n3, n_commercial3, n_residential3, point_distribution3);
                 break;
             default:
