@@ -5,12 +5,9 @@ import org.jacop.core.IntVar;
 import org.jacop.core.Store;
 import org.jacop.search.*;
 
-import static Lab1Java.PizzaMaster.printVector;
-import static Lab2Java.Logistics.*;
-
 public class UrbanPlanning {
 
-    public static int EXAMPLE_NBR = 1;
+    public static int EXAMPLE_NBR = 3;
 
     public static void main(String[] args) {
         long T1, T2, T;
@@ -108,8 +105,8 @@ public class UrbanPlanning {
         boolean result = search.labeling(store, select, minScore);
 
         if (result) {
-            System.out.println("Solution : ");
-            System.out.println("Maximum grid score is: " + maxScore.value());
+            System.out.println("Solution: ");
+            System.out.println("Maximum grid score: " + maxScore.value());
             prettyPrint(grid);
         } else {
             System.out.println("No solution found.");
@@ -175,6 +172,26 @@ public class UrbanPlanning {
             sb.append("\n\n");
         }
         System.out.print(sb.toString());
+    }
+
+    public static IntVar[] getColumn(IntVar[][] matrix, int i) {
+        IntVar[] col = new IntVar[matrix.length];
+        for (int j = 0; j < matrix.length; j++) {
+            col[j] = matrix[j][i];
+        }
+        return col;
+    }
+
+    public static IntVar[] vectorizeIntVar(IntVar[][] matrix) {
+        IntVar[] vector = new IntVar[matrix.length * matrix[0].length];
+        int index = 0;
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                vector[index] = matrix[i][j];
+                index++;
+            }
+        }
+        return vector;
     }
 
 }
