@@ -70,6 +70,8 @@ public class UrbanPlanning {
         //Optimization by grouping solutions to the upper left corner of the grid.
         //Not usable when grid is too small since not enough solutions exist to provide
         //an optimal one when stacking this optimization with LexOrder.
+        //(Using this reduces the number of nodes from 1916136 to 79154 and number
+        //of wrong decisions from 958069 to 39577.)
         if (EXAMPLE_NBR == 3) {
             for (int i = 0; i < n - 1; i++) {
                 IntVar sumRow1 = new IntVar(store, 0, n);
@@ -86,7 +88,7 @@ public class UrbanPlanning {
                 store.impose(new XgteqY(sumCol1, sumCol2));
             }
         }
-        
+
         //Max is what we want to find.
         IntVar maxScore = new IntVar(store, -(n * n * 2), n * n * 2);
         store.impose(new SumInt(store, scores, "==", maxScore));
