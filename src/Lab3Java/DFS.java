@@ -296,7 +296,7 @@ public class DFS {
         /**
          * Value selection based on example.
          */
-        int selectValue(IntVar v) {
+        public int selectValue(IntVar v) {
             switch(example){
                 case 0: return v.min();
                 case 1: return (v.max()+v.min())/2;
